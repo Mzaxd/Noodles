@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mzaxd.noodles.mapper.HostMachineMapper">
+
+    <resultMap id="BaseResultMap" type="com.mzaxd.noodles.domain.entity.HostMachine">
+        <id property="id" column="id" jdbcType="BIGINT"/>
+        <result property="name" column="name" jdbcType="VARCHAR"/>
+        <result property="description" column="description" jdbcType="VARCHAR"/>
+        <result property="avatar" column="avatar" jdbcType="VARCHAR"/>
+        <result property="sshId" column="ssh_id" jdbcType="BIGINT"/>
+        <result property="osId" column="os_id" jdbcType="BIGINT"/>
+        <result property="manageIp" column="manage_ip" jdbcType="VARCHAR"/>
+        <result property="hostMachineId" column="host_machine_id" jdbcType="INTEGER"/>
+        <result property="threads" column="threads" jdbcType="BIGINT"/>
+        <result property="memory" column="memory" jdbcType="BIGINT"/>
+        <result property="hostMachineState" column="host_machine_state" jdbcType="INTEGER"/>
+        <result property="notify" column="notify" jdbcType="INTEGER"/>
+        <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
+        <result property="createBy" column="create_by" jdbcType="BIGINT"/>
+        <result property="updateTime" column="update_time" jdbcType="TIMESTAMP"/>
+        <result property="updateBy" column="update_by" jdbcType="BIGINT"/>
+        <result property="delFlag" column="del_flag" jdbcType="INTEGER"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        hm
+        .
+        id
+        ,hm.name,hm.description,
+        hm.avatar,hm.ssh_id,hm.os_id,
+        hm.manage_ip,hm.host_machine_id,hm.threads,
+        hm.memory,hm.host_machine_state,notify,
+        hm.create_time,hm.create_by,hm.update_time,
+        hm.update_by,hm.del_flag
+    </sql>
+    <select id="vmListWithCondition" resultType="com.mzaxd.noodles.domain.entity.HostMachine">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM `host_machine` hm INNER JOIN os
+        ON hm.os_id = os.id
+        WHERE hm.del_flag = 0 AND hm.host_machine_id != 0
+        <if test="selectedKernel != null and selectedKernel.size() > 0">
+            AND os.kernel in
+            <foreach collection="selectedKernel" index="index" item="kernel" open="(" separator="," close=")">
+                #{kernel}
+            </foreach>
+        </if>
+        <if test="selectedHost != null and selectedHost.size() > 0">
+            AND hm.host_machine_id in
+            <foreach collection="selectedHost" index="index" item="host" open="(" separator="," close=")">
+                #{host}
+            </foreach>
+        </if>
+        <if test="selectedStatus != null and selectedStatus.size() > 0">
+            AND hm.host_machine_state in
+            <foreach collection="selectedStatus" index="index" item="state" open="(" separator="," close=")">
+                #{state}
+            </foreach>
+        </if>
+        <if test="nameLike != null and nameLike != ''">
+            AND hm.name LIKE CONCAT('%',#{nameLike},'%')
+        </if>
+    </select>
+</mapper>

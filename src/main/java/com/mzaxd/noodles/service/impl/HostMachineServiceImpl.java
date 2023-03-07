@@ -232,7 +232,7 @@ public class HostMachineServiceImpl extends ServiceImpl<HostMachineMapper, HostM
     public ResponseResult<HostVo> getHostById(Integer id) {
         HostMachine hostMachine = getById(id);
         HostVo hostVo = BeanCopyUtils.copyBean(hostMachine, HostVo.class);
-        Os os = osMapper.selectById(hostMachine.getOsId());
+        Os os = osService.getById(hostMachine.getOsId());
         hostVo.setOsKernel(os.getKernel());
 
         if (Objects.nonNull(hostMachine.getSshId())) {

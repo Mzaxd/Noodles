@@ -90,7 +90,7 @@ public class HostController {
     }
 
     @GetMapping("/hostList")
-    public ResponseResult vmListWithCondition(
+    public ResponseResult hostListWithCondition(
             @RequestParam(value = "q", required = false) String nameLike,
             @RequestParam(value = "selectedStatus", required = false) List<Integer> selectedStatus,
             @RequestParam("perPage") Integer perPage,

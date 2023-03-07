@@ -23,6 +23,7 @@ spring:
     password: 200712
 
 mybatis-plus:
+  #打印SQL日志 建议生产环境关掉 否则日志爆炸
   configuration:
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
   global-config:

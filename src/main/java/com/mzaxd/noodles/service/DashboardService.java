@@ -19,4 +19,13 @@ public interface DashboardService {
      * @return
      */
     ResponseResult getRecentConsoleList();
+
+    /**
+     * 获取所有受影响的服务
+     *
+     * @return ResponseResult
+     * @author mzaxd
+     * @date 2023/3/8 9:43
+     */
+    ResponseResult getAffectedServirList();
 }

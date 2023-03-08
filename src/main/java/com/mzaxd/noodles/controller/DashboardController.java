@@ -6,6 +6,7 @@ import com.mzaxd.noodles.service.EveryDayDataService;
 import com.mzaxd.noodles.service.HostDetectorService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
@@ -50,6 +51,11 @@ public class DashboardController {
     @GetMapping("/getRecentConsoleList")
     public ResponseResult getRecentConsoleList() {
         return dashboardService.getRecentConsoleList();
+    }
+
+    @GetMapping("/getAffectedServirList")
+    public ResponseResult getAffectedServirList() {
+        return dashboardService.getAffectedServirList();
     }
 
 }

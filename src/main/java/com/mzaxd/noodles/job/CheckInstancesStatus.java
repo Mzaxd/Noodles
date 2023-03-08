@@ -12,11 +12,9 @@ import com.mzaxd.noodles.domain.entity.HostMachine;
 import com.mzaxd.noodles.service.*;
 import com.mzaxd.noodles.util.RedisCache;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.CommandLineRunner;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
@@ -70,7 +68,7 @@ public class CheckInstancesStatus{
                 container.setContainerState(SystemConstant.CONTAINER_STATE_EXITED);
                 //判断Redis里面有没有 如果有就不需要提醒 如果没有就提醒
                 Set<String> set = redisCache.getCacheSet(RedisConstant.NOTIFY_CONTAINER_IDS);
-                if (Objects.nonNull(set)){
+                if (!CollectionUtils.isEmpty(set)){
                     //如果redis里面有 说明已经发送过了未check的通知 所以不需要发送 直接返回
                     if (set.contains(container.getId().toString())) {
                         return;
@@ -108,7 +106,7 @@ public class CheckInstancesStatus{
                 vm.setHostMachineState(SystemConstant.HOST_MACHINE_STATE_OFFLINE);
                 //判断Redis里面有没有 如果有就不需要提醒 如果没有就提醒
                 Set<String> set = redisCache.getCacheSet(RedisConstant.NOTIFY_VM_IDS);
-                if (Objects.nonNull(set)){
+                if (!CollectionUtils.isEmpty(set)){
                     //如果redis里面有 说明已经发送过了未check的通知 所以不需要发送 直接返回
                     if (set.contains(vm.getId().toString())) {
                         return;
@@ -148,7 +146,7 @@ public class CheckInstancesStatus{
                 }
                 //判断Redis里面有没有 如果有就不需要提醒 如果没有就提醒
                 Set<String> set = redisCache.getCacheSet(RedisConstant.NOTIFY_HOST_IDS);
-                if (Objects.nonNull(set)){
+                if (!CollectionUtils.isEmpty(set)){
                     //如果redis里面有 说明已经发送过了未check的通知 所以不需要发送 直接返回
                     if (set.contains(hostMachine.getId().toString())) {
                         return;

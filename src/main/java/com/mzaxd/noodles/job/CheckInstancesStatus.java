@@ -138,7 +138,7 @@ public class CheckInstancesStatus{
                     hostMachine.setHostMachineState(SystemConstant.HOST_MACHINE_STATE_ONLINE);
                     hostMachines.add(hostMachine);
                 }
-            } catch (HttpException exception) {
+            } catch (Exception exception) {
                 HostMachine hostMachine = hostMachineService.getById(detector.getHostMachineId());
                 if (Objects.nonNull(hostMachine)) {
                     hostMachine.setHostMachineState(SystemConstant.HOST_MACHINE_STATE_OFFLINE);

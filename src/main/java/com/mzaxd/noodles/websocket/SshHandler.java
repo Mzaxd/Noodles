@@ -69,12 +69,12 @@ public class SshHandler {
     }
 
 
-    private static final AtomicInteger OnlineCount = new AtomicInteger(0);
+    private static final AtomicInteger ONLINE_COUNT = new AtomicInteger(0);
 
     /**
      * concurrent包的线程安全Set，用来存放每个客户端对应的Session对象。
      */
-    private static CopyOnWriteArraySet<javax.websocket.Session> sessionSet = new CopyOnWriteArraySet<javax.websocket.Session>();
+    private static final CopyOnWriteArraySet<javax.websocket.Session> sessionSet = new CopyOnWriteArraySet<javax.websocket.Session>();
 
 
     /**
@@ -90,7 +90,7 @@ public class SshHandler {
         sshItem.setUser(sshLink.getName());
         sshItem.setPassword(sshLink.getPassword());
         // 在线数加1
-        int cnt = OnlineCount.incrementAndGet();
+        int cnt = ONLINE_COUNT.incrementAndGet();
         log.info("有连接加入，当前连接数为：{},sessionId={}", cnt, session.getId());
         HandlerItem handlerItem = null;
         try {
@@ -115,8 +115,9 @@ public class SshHandler {
      */
     @OnClose
     public void onClose(javax.websocket.Session session) {
+        destroy(session);
         sessionSet.remove(session);
-        int cnt = OnlineCount.decrementAndGet();
+        int cnt = ONLINE_COUNT.decrementAndGet();
         log.info("有连接关闭，当前连接数为：{}", cnt);
     }
 
@@ -281,7 +282,7 @@ public class SshHandler {
             System.out.println("#####:" + msg);
             session.getBasicRemote().sendText(msg);
         } catch (IOException e) {
-
+            e.printStackTrace();
         }
     }
 }

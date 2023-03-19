@@ -1,0 +1,55 @@
+server:
+  port: 6081
+spring:
+  #MySQL配置
+  datasource:
+    url: jdbc:mysql://192.168.1.103:3307/noodles?characterEncoding=utf-8&serverTimezone=Asia/Shanghai
+    username: root
+    password: rootroot
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  servlet:
+    multipart:
+      max-file-size: 2MB
+      max-request-size: 5MB
+  #Redis配置
+  redis:
+    host: 192.168.1.103
+    database: 3
+  #RabbitMq配置
+  rabbitmq:
+    host: 192.168.1.103
+    port: 5672
+    username: mzaxd
+    password: 200712
+  #配置SpringBootAdmin
+  boot:
+    admin:
+      client:
+        url: http://192.168.1.90:8324 #配置 Admin Server的地址
+        instance:
+          service-host-type: ip #显示ip地址而不是默认的主机名
+# 开放健康检查接口
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: ALWAYS
+
+mybatis-plus:
+  #打印SQL日志 建议生产环境关掉 否则日志爆炸
+#  configuration:
+#    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  global-config:
+    db-config:
+      logic-delete-field: delFlag
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+      id-type: auto
+pagehelper:
+  auto-dialect: on
+  reasonable: true
+  support-methods-arguments: true
+  page-size-zero: true

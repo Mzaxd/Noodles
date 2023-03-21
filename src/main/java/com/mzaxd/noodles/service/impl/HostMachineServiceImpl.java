@@ -13,10 +13,7 @@ import com.mzaxd.noodles.domain.message.Server;
 import com.mzaxd.noodles.domain.vo.*;
 import com.mzaxd.noodles.enums.AppHttpCodeEnum;
 import com.mzaxd.noodles.exception.SystemException;
-import com.mzaxd.noodles.mapper.HostDetectorMapper;
-import com.mzaxd.noodles.mapper.HostMachineMapper;
-import com.mzaxd.noodles.mapper.OsMapper;
-import com.mzaxd.noodles.mapper.SshLinkMapper;
+import com.mzaxd.noodles.mapper.*;
 import com.mzaxd.noodles.service.*;
 import com.mzaxd.noodles.util.BeanCopyUtils;
 import com.mzaxd.noodles.util.SshLinkUtil;
@@ -73,6 +70,9 @@ public class HostMachineServiceImpl extends ServiceImpl<HostMachineMapper, HostM
 
     @Resource
     private SshLinkMapper sshLinkMapper;
+
+    @Resource
+    private NotificationMapper notificationMapper;
 
     @Override
     public ResponseResult getHostDrawer() {
@@ -340,8 +340,16 @@ public class HostMachineServiceImpl extends ServiceImpl<HostMachineMapper, HostM
             log.info("删除hostId为{}的host信息", id);
             osMapper.deleteById(hostMachine.getOsId());
         }
-        log.info("删除id为{}的host", id);
+        //删除掉线提醒
+        LambdaQueryWrapper<Notification> notificationLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        notificationLambdaQueryWrapper.eq(Notification::getInstanceId, id);
+        notificationLambdaQueryWrapper.eq(Notification::getInstanceType, SystemConstant.INSTANCETYPE_HOST);
+        notificationMapper.delete(notificationLambdaQueryWrapper);
+        log.info("删除id为{}的物理机的所有掉线提醒", id);
+
+        //删除物理机
         hostMachineMapper.deleteById(id);
+        log.info("删除id为{}的host", id);
         return ResponseResult.okResult(SystemConstant.SUCCESS_CODE, "删除成功");
     }
 
@@ -453,8 +461,15 @@ public class HostMachineServiceImpl extends ServiceImpl<HostMachineMapper, HostM
         if (Objects.nonNull(getById(id).getSshId())) {
             sshLinkMapper.deleteById(getById(id).getSshId());
         }
-        log.info("删除id为{}的vm", id);
+        //删除掉线提醒
+        LambdaQueryWrapper<Notification> notificationLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        notificationLambdaQueryWrapper.eq(Notification::getInstanceId, id);
+        notificationLambdaQueryWrapper.eq(Notification::getInstanceType, SystemConstant.INSTANCETYPE_VM);
+        notificationMapper.delete(notificationLambdaQueryWrapper);
+        log.info("删除id为{}的虚拟机的所有掉线提醒", id);
+
         hostMachineMapper.deleteById(id);
+        log.info("删除id为{}的vm", id);
         return ResponseResult.okResult(SystemConstant.SUCCESS_CODE, "删除成功");
     }
 

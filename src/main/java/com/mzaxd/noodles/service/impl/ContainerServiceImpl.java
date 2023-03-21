@@ -11,12 +11,14 @@ import com.mzaxd.noodles.domain.entity.Container;
 import com.mzaxd.noodles.domain.vo.*;
 import com.mzaxd.noodles.enums.AppHttpCodeEnum;
 import com.mzaxd.noodles.mapper.HostMachineMapper;
+import com.mzaxd.noodles.mapper.NotificationMapper;
 import com.mzaxd.noodles.service.ContainerService;
 import com.mzaxd.noodles.mapper.ContainerMapper;
 import com.mzaxd.noodles.service.HostMachineService;
 import com.mzaxd.noodles.service.SshLinkService;
 import com.mzaxd.noodles.util.BeanCopyUtils;
 import com.mzaxd.noodles.util.SshLinkUtil;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -32,6 +34,7 @@ import java.util.Objects;
  * @createDate 2023-02-02 06:26:00
  */
 @Service
+@Slf4j
 public class ContainerServiceImpl extends ServiceImpl<ContainerMapper, Container>
         implements ContainerService {
 
@@ -46,6 +49,9 @@ public class ContainerServiceImpl extends ServiceImpl<ContainerMapper, Container
 
     @Resource
     private SshLinkService sshLinkService;
+
+    @Resource
+    private NotificationMapper notificationMapper;
 
     @Override
     public ResponseResult containerListSummaryStatistics() {
@@ -109,6 +115,12 @@ public class ContainerServiceImpl extends ServiceImpl<ContainerMapper, Container
     @Override
     public ResponseResult deleteContainerById(Integer id) {
         if (removeById(id)) {
+            //删除掉线提醒
+            LambdaQueryWrapper<Notification> notificationLambdaQueryWrapper = new LambdaQueryWrapper<>();
+            notificationLambdaQueryWrapper.eq(Notification::getInstanceId, id);
+            notificationLambdaQueryWrapper.eq(Notification::getInstanceType, SystemConstant.INSTANCETYPE_CONTAINER);
+            notificationMapper.delete(notificationLambdaQueryWrapper);
+            log.info("删除id为{}的虚拟机的所有掉线提醒", id);
             return ResponseResult.okResult("删除成功");
         }
         return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR);

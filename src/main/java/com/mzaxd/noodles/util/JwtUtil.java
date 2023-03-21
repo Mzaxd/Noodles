@@ -4,6 +4,7 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtBuilder;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
@@ -21,7 +22,7 @@ public class JwtUtil {
     /**
      * 有效期为一小时
      */
-    public static final Long JWT_TTL = 24 * 60 * 60 * 1000L;
+    public static final Long JWT_TTL = 72 * 60 * 60 * 1000L;
     /**
      * 设置秘钥明文
      */
@@ -92,12 +93,6 @@ public class JwtUtil {
         // 设置过期时间
         JwtBuilder builder = getJwtBuilder(subject, ttlMillis, id);
         return builder.compact();
-    }
-
-    public static void main(String[] args) throws Exception {
-        String token = "eyJhbGciOiJIUzI1NiJ9.eyJqdGkiOiJjYWM2ZDVhZi1mNjVlLTQ0MDAtYjcxMi0zYWEwOGIyOTIwYjQiLCJzdWIiOiJzZyIsImlzcyI6InNnIiwiaWF0IjoxNjM4MTA2NzEyLCJleHAiOjE2MzgxMTAzMTJ9.JVsSbkP94wuczb4QryQbAke3ysBDIL5ou8fWsbt_ebg";
-        Claims claims = parseJWT(token);
-        System.out.println(claims);
     }
 
     /**

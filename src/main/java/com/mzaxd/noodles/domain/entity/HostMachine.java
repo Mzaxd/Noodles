@@ -58,6 +58,11 @@ public class HostMachine implements Serializable {
     private String manageIp;
 
     /**
+     * 实际服务器地址(不带协议，不带端口号)
+     */
+    private String serverAddress;
+
+    /**
      * 宿主机id（0代表物理机没有宿主机）
      */
     private Long hostMachineId;

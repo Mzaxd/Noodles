@@ -53,6 +53,11 @@ public class Container implements Serializable {
     private String webUi;
 
     /**
+     * 实际服务器地址(不带协议，不带端口号)
+     */
+    private String serverAddress;
+
+    /**
      * 宿主机id
      */
     private Long hostMachineId;

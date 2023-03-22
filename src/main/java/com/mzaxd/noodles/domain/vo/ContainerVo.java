@@ -40,6 +40,11 @@ public class ContainerVo {
     private String imageName;
 
     /**
+     * 实际服务器地址(不带协议，不带端口号)
+     */
+    private String serverAddress;
+
+    /**
      * WebUi URL
      */
     private String webUi;

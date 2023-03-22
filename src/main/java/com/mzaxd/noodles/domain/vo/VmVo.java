@@ -55,6 +55,11 @@ public class VmVo {
     private String osName;
 
     /**
+     * 实际服务器地址(不带协议，不带端口号)
+     */
+    private String serverAddress;
+
+    /**
      * 管理ip地址
      */
     private String manageIp;

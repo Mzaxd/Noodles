@@ -12,6 +12,7 @@
         <result property="sshId" column="ssh_id" jdbcType="BIGINT"/>
         <result property="osId" column="os_id" jdbcType="BIGINT"/>
         <result property="manageIp" column="manage_ip" jdbcType="VARCHAR"/>
+        <result property="serverAddress" column="server_address" jdbcType="VARCHAR"/>
         <result property="hostMachineId" column="host_machine_id" jdbcType="INTEGER"/>
         <result property="threads" column="threads" jdbcType="BIGINT"/>
         <result property="memory" column="memory" jdbcType="BIGINT"/>
@@ -29,7 +30,7 @@
         .
         id
         ,hm.name,hm.description,
-        hm.avatar,hm.ssh_id,hm.os_id,
+        hm.avatar,hm.ssh_id,hm.os_id,hm.server_address,
         hm.manage_ip,hm.host_machine_id,hm.threads,
         hm.memory,hm.host_machine_state,notify,
         hm.create_time,hm.create_by,hm.update_time,

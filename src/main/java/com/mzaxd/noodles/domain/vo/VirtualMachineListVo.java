@@ -54,6 +54,11 @@ public class VirtualMachineListVo {
     private String manageIp;
 
     /**
+     * 实际服务器地址(不带协议，不带端口号)
+     */
+    private String serverAddress;
+
+    /**
      * 核心线程数
      */
     private Long threads;

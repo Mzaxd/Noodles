@@ -61,9 +61,9 @@ public class ContainerServiceImpl extends ServiceImpl<ContainerMapper, Container
         //设置查询所有离线vm的条件
         LambdaQueryWrapper<Container> exitedWrapper = new LambdaQueryWrapper<>();
         exitedWrapper.eq(Container::getContainerState, SystemConstant.CONTAINER_STATE_EXITED);
-        //设置查询所有睡眠vm的条件
+        //设置查询所有未知vm的条件
         LambdaQueryWrapper<Container> pausedWrapper = new LambdaQueryWrapper<>();
-        pausedWrapper.eq(Container::getContainerState, SystemConstant.CONTAINER_STATE_PAUSED);
+        pausedWrapper.eq(Container::getContainerState, SystemConstant.CONTAINER_STATE_UNKNOWN);
 
         int total = count();
         int running = count(runningWrapper);
@@ -73,7 +73,7 @@ public class ContainerServiceImpl extends ServiceImpl<ContainerMapper, Container
         result.put("total", total);
         result.put("running", running);
         result.put("exited", exited);
-        result.put("paused", paused);
+        result.put("unknown", paused);
         return ResponseResult.okResult(result);
 
     }

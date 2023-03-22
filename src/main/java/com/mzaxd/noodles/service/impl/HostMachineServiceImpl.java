@@ -117,9 +117,9 @@ public class HostMachineServiceImpl extends ServiceImpl<HostMachineMapper, HostM
         LambdaQueryWrapper<HostMachine> offlineWrapper = new LambdaQueryWrapper<>();
         offlineWrapper.eq(HostMachine::getHostMachineState, SystemConstant.HOST_MACHINE_STATE_OFFLINE);
         offlineWrapper.ne(HostMachine::getHostMachineId, SystemConstant.HOST_MACHINE_ID_HOST);
-        //设置查询所有睡眠vm的条件
+        //设置查询所有未知vm的条件
         LambdaQueryWrapper<HostMachine> sleepWrapper = new LambdaQueryWrapper<>();
-        sleepWrapper.eq(HostMachine::getHostMachineState, SystemConstant.HOST_MACHINE_STATE_SLEEP);
+        sleepWrapper.eq(HostMachine::getHostMachineState, SystemConstant.HOST_MACHINE_STATE_UNKNOWN);
         sleepWrapper.ne(HostMachine::getHostMachineId, SystemConstant.HOST_MACHINE_ID_HOST);
 
         int total = count(wrapper);
@@ -130,7 +130,7 @@ public class HostMachineServiceImpl extends ServiceImpl<HostMachineMapper, HostM
         result.put("total", total);
         result.put("online", online);
         result.put("offline", offline);
-        result.put("sleep", sleep);
+        result.put("unknown", sleep);
         return ResponseResult.okResult(result);
     }
 

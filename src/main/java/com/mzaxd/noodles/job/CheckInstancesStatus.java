@@ -1,6 +1,5 @@
 package com.mzaxd.noodles.job;
 
-import cn.hutool.http.HttpException;
 import cn.hutool.http.HttpRequest;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.mzaxd.noodles.constant.RedisConstant;
@@ -12,6 +11,7 @@ import com.mzaxd.noodles.domain.entity.HostMachine;
 import com.mzaxd.noodles.service.*;
 import com.mzaxd.noodles.util.CpuUtil;
 import com.mzaxd.noodles.util.RedisCache;
+import com.mzaxd.noodles.util.UrlUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -76,10 +76,18 @@ public class CheckInstancesStatus {
         for (Container container : containers) {
             futures.add(executor.submit(() -> {
                 try {
-                    if (!StringUtils.hasText(container.getWebUi())) {
+                    if (!StringUtils.hasText(container.getWebUi()) && !StringUtils.hasText(container.getServerAddress())) {
                         container.setContainerState(SystemConstant.CONTAINER_STATE_UNKNOWN);
                         return container;
                     }
+                    //通过Socket（IP+端口）判断是否在线
+                    if (StringUtils.hasText(container.getServerAddress())) {
+                        if (UrlUtil.isServiceOnline(UrlUtil.getHostname(container.getServerAddress()), UrlUtil.getPort(container.getServerAddress()))) {
+                            container.setContainerState(SystemConstant.CONTAINER_STATE_RUNNING);
+                            return container;
+                        }
+                    }
+                    //通过HTTP请求判断是否在线
                     HttpRequest.get(container.getWebUi()).setConnectionTimeout(5000).execute(true);
                     log.info("[实例状态检测]：与{}建立连接成功", container.getName());
                     container.setContainerState(SystemConstant.CONTAINER_STATE_RUNNING);
@@ -131,10 +139,19 @@ public class CheckInstancesStatus {
         List<HostMachine> vms = hostMachineService.list(vmWrapper);
         vms.forEach(vm -> {
             try {
-                if (!StringUtils.hasText(vm.getManageIp())) {
+                if (!StringUtils.hasText(vm.getServerAddress()) && !StringUtils.hasText(vm.getServerAddress())) {
                     vm.setHostMachineState(SystemConstant.HOST_MACHINE_STATE_UNKNOWN);
                     return;
                 }
+                //通过Ping的方式判断是否在线
+                if (StringUtils.hasText(vm.getServerAddress())) {
+                    if (UrlUtil.isHostOnline(vm.getServerAddress())){
+                        log.info("[实例状态检测]：与{}建立连接成功", vm.getName());
+                        vm.setHostMachineState(SystemConstant.HOST_MACHINE_STATE_ONLINE);
+                        return;
+                    }
+                }
+                //通过HTTP请求的方式判断是否在线
                 HttpRequest.get(vm.getManageIp()).setConnectionTimeout(5000).execute(true);
                 log.info("[实例状态检测]：与{}建立连接成功", vm.getName());
                 vm.setHostMachineState(SystemConstant.HOST_MACHINE_STATE_ONLINE);

@@ -17,17 +17,25 @@ import com.mzaxd.noodles.service.*;
 import com.mzaxd.noodles.util.CpuUtil;
 import com.mzaxd.noodles.util.RedisCache;
 import com.mzaxd.noodles.util.SystemInfoUtils;
+import com.mzaxd.noodles.util.UrlUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
+import java.io.IOException;
+import java.net.InetAddress;
+
 import javax.annotation.Resource;
+import java.net.Socket;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Slf4j
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -451,5 +459,53 @@ class NoodlesApplicationTests {
         long elapsedTime = endTime - startTime;
         double seconds = (double) elapsedTime / 1_000_000_000.0; // 将纳秒转换为秒
         System.out.println("代码执行时间：" + seconds + " 秒");
+    }
+
+    @Test
+    public void pingTest() {
+        String ipAddress = "192.168.1.90"; // 要检查的IP地址
+        try {
+            InetAddress inetAddress = InetAddress.getByName(ipAddress);
+            boolean isReachable = inetAddress.isReachable(5000); // 超时时间为5秒
+            if (isReachable) {
+                System.out.println("虚拟机在线");
+            } else {
+                System.out.println("虚拟机不在线");
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Test
+    public void serviceTest() {
+        try {
+            String serverName = "wiz.elizaveta.top";
+            int port = 700;
+            Socket socket = new Socket(serverName, port);
+            System.out.println("MySQL服务已经开启");
+            socket.close();
+        } catch (Exception e) {
+            System.out.println("MySQL服务没有开启或者远程服务器无法访问");
+        }
+    }
+
+    @Test
+    public void hostnameTest() {
+        String hostname = UrlUtil.getHostname("192.168.1.90:8080");
+        System.out.println(hostname);
+    }
+
+    @Test
+    public void portTest() {
+        String address = "192.168.1.103:3306";
+        String regex = ":(\\d+)$"; // 匹配冒号后面的数字
+        Pattern pattern = Pattern.compile(regex);
+        Matcher matcher = pattern.matcher(address);
+        if (matcher.find()) {
+            System.out.println(matcher.group(1));
+        } else {
+            System.out.println("解析失败");
+        }
     }
 }

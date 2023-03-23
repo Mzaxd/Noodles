@@ -632,34 +632,45 @@ class NoodlesApplicationTests {
 
 
     @Test
-    public void containerCheck() {
+    public void containerCheck() throws InterruptedException {
+        long startTime = System.nanoTime();    // 记录开始时间
+
         List<Container> containers = containerService.list();
 
-        containers.forEach(container -> {
-            try {
-                if (!StringUtils.hasText(container.getWebUi()) && !StringUtils.hasText(container.getServerAddress())) {
-                    container.setContainerState(SystemConstant.CONTAINER_STATE_UNKNOWN);
-                    return;
-                }
-                //通过Socket（IP+端口）判断是否在线
-                if (StringUtils.hasText(container.getServerAddress())) {
-                    if (UrlUtil.isServiceOnline(UrlUtil.getHostname(container.getServerAddress()), UrlUtil.getPort(container.getServerAddress()))) {
-                        container.setContainerState(SystemConstant.CONTAINER_STATE_RUNNING);
+        // Create a thread pool with a fixed number of threads
+        ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+
+        // Submit each container to the thread pool for processing
+        for (Container container : containers) {
+            executor.submit(() -> {
+                try {
+                    if (!StringUtils.hasText(container.getWebUi()) && !StringUtils.hasText(container.getServerAddress())) {
+                        container.setContainerState(SystemConstant.CONTAINER_STATE_UNKNOWN);
+                        containerService.saveOrUpdate(container);
                         return;
                     }
-                }
-                //通过HTTP请求判断是否在线
-                HttpRequest.get(container.getWebUi()).setConnectionTimeout(5000).execute(true);
-                log.info("[实例状态检测]：与{}建立连接成功", container.getName());
-                container.setContainerState(SystemConstant.CONTAINER_STATE_RUNNING);
-            } catch (Exception exception) {
-                log.info("[实例状态检测]：与{}建立连接失败，状态转为离线", container.getName());
-                container.setContainerState(SystemConstant.CONTAINER_STATE_EXITED);
-                // 判断 Redis 里面有没有，如果有就不需要提醒，如果没有就提醒
-                Set<String> set = redisCache.getCacheSet(RedisConstant.NOTIFY_CONTAINER_IDS);
-                if (CollectionUtils.isEmpty(set)) {
-                    set = new HashSet<>();
-                }
+                    //通过Socket（IP+端口）判断是否在线
+                    if (StringUtils.hasText(container.getServerAddress())) {
+                        if (UrlUtil.isServiceOnline(UrlUtil.getHostname(container.getServerAddress()), UrlUtil.getPort(container.getServerAddress()))) {
+                            container.setContainerState(SystemConstant.CONTAINER_STATE_RUNNING);
+                            containerService.saveOrUpdate(container);
+                            return;
+                        }
+                    }
+                    //通过HTTP请求判断是否在线
+                    HttpRequest.get(container.getWebUi()).setConnectionTimeout(5000).execute(true);
+                    log.info("[实例状态检测]：与{}建立连接成功", container.getName());
+                    container.setContainerState(SystemConstant.CONTAINER_STATE_RUNNING);
+                    containerService.saveOrUpdate(container);
+                } catch (Exception exception) {
+                    log.info("[实例状态检测]：与{}建立连接失败，状态转为离线", container.getName());
+                    container.setContainerState(SystemConstant.CONTAINER_STATE_EXITED);
+                    containerService.saveOrUpdate(container);
+                    // 判断 Redis 里面有没有，如果有就不需要提醒，如果没有就提醒
+                    Set<String> set = redisCache.getCacheSet(RedisConstant.NOTIFY_CONTAINER_IDS);
+                    if (CollectionUtils.isEmpty(set)) {
+                        set = new HashSet<>();
+                    }
                     // 如果 Redis 里面有，说明已经发送过了未 check 的通知，所以不需要发送，直接返回
                     if (set.contains(container.getId().toString())) {
                         return;
@@ -680,8 +691,30 @@ class NoodlesApplicationTests {
                             set.add(container.getId().toString());
                         }
                     }
-                redisCache.setCacheSet(RedisConstant.NOTIFY_CONTAINER_IDS, set);
-            }
-        });
+                    redisCache.setCacheSet(RedisConstant.NOTIFY_CONTAINER_IDS, set);
+                }
+            });
+        }
+
+// Shutdown the thread pool and wait for all tasks to complete
+        executor.shutdown();
+        executor.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
+
+        long endTime = System.nanoTime();      // 记录结束时间
+        long elapsedTime = endTime - startTime;
+        double seconds = (double) elapsedTime / 1_000_000_000.0; // 将纳秒转换为秒
+        System.out.println("代码执行时间：" + seconds + " 秒");
+    }
+
+
+    @Test
+    public void testRedis() {
+        Set<String> set = redisCache.getCacheSet(RedisConstant.NOTIFY_CONTAINER_IDS);
+        if (CollectionUtils.isEmpty(set)) {
+            set = new HashSet<>();
+        }
+        System.out.println(set);
+        set.add("1");
+        redisCache.setCacheSet(RedisConstant.NOTIFY_HOST_IDS, set);
     }
 }

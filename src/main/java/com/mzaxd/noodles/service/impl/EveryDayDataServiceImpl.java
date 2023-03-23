@@ -15,13 +15,13 @@ import java.time.ZoneId;
 import java.util.*;
 
 /**
-* @author 13439
-* @description 针对表【every_data】的数据库操作Service实现
-* @createDate 2023-02-21 12:52:12
-*/
+ * @author 13439
+ * @description 针对表【every_data】的数据库操作Service实现
+ * @createDate 2023-02-21 12:52:12
+ */
 @Service
 public class EveryDayDataServiceImpl extends ServiceImpl<EveryDayDataMapper, EveryDayData>
-    implements EveryDayDataService {
+        implements EveryDayDataService {
 
     @Override
     public ResponseResult getAuditLogCountYesterday() {
@@ -87,15 +87,15 @@ public class EveryDayDataServiceImpl extends ServiceImpl<EveryDayDataMapper, Eve
 
     @Override
     public List<EveryDayData> getLastWeekData() {
-        return getLastDate(7);
+        return getLastDate(7, getLastWeekLambdaWrapper());
     }
 
-    public List<EveryDayData> getLastDate(int dayNum) {
+    public List<EveryDayData> getLastDate(int dayNum, LambdaQueryWrapper<EveryDayData> lambdaQueryWrapper) {
         // 今天的前一天是截止日期
         LocalDate end = LocalDate.now().minusDays(1);
         // 七天前是起始日期
         LocalDate start = end.minusDays(6);
-        List<EveryDayData> list = list(getLastWeekLambdaWrapper());
+        List<EveryDayData> list = list(lambdaQueryWrapper);
 
         // 如果不足7条，则补充空数据
         int missingDays = dayNum - list.size();
@@ -122,7 +122,7 @@ public class EveryDayDataServiceImpl extends ServiceImpl<EveryDayDataMapper, Eve
 
     @Override
     public List<EveryDayData> getLastSixDayData() {
-        return getLastDate(6);
+        return getLastDate(6, getLastSixDayLambdaWrapper());
     }
 }
 

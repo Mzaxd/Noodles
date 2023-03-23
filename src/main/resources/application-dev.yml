@@ -3,7 +3,7 @@ server:
 spring:
   #MySQL配置
   datasource:
-    url: jdbc:mysql://192.168.1.103:3307/noodles?characterEncoding=utf-8&serverTimezone=Asia/Shanghai
+    url: jdbc:mysql://localhost:3306/noodles?characterEncoding=utf-8&serverTimezone=Asia/Shanghai
     username: root
     password: rootroot
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -14,7 +14,7 @@ spring:
   #Redis配置
   redis:
     host: 192.168.1.103
-    database: 3
+    database: 2
   #RabbitMq配置
   rabbitmq:
     host: 192.168.1.103
@@ -38,10 +38,11 @@ management:
     health:
       show-details: ALWAYS
 
+
 mybatis-plus:
   #打印SQL日志 建议生产环境关掉 否则日志爆炸
-  configuration:
-    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+#  configuration:
+#    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
   global-config:
     db-config:
       logic-delete-field: delFlag
@@ -53,3 +54,7 @@ pagehelper:
   reasonable: true
   support-methods-arguments: true
   page-size-zero: true
+logging:
+  level:
+    com.mzaxd.noodles: info
+

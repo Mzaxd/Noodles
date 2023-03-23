@@ -55,15 +55,10 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
     @Resource
     private RedisTemplate redisTemplate;
 
+    @Override
     public void sendContainerOfflineNotification(Long id) {
         Notification notification = new Notification();
         Container container = containerService.getById(id);
-        Integer notify = container.getNotify();
-        //判断发送方式
-        if (notify.equals(SystemConstant.NOTIFY_BROWSER_EMAIL) || notify.equals(SystemConstant.NOTIFY_EMAIL)) {
-            //发送邮件
-            sendContainerOfflineEmail(id);
-        }
         notification.setTitle("容器掉线")
                 .setType(SystemConstant.OFFLINE_NOTIFICATION)
                 .setSendType(container.getNotify())
@@ -75,7 +70,14 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
         log.info("[掉线提醒]：发送浏览器提醒：{}", content);
     }
 
-    private void sendContainerOfflineEmail(Long id) {
+    @Override
+    public void sendContainerOfflineNotificationEmail(Long id) {
+        sendContainerOfflineNotification(id);
+        sendContainerOfflineEmail(id);
+    }
+
+    @Override
+    public void sendContainerOfflineEmail(Long id) {
         Container container = containerService.getById(id);
         String time = LocalDateTime.now().toString();
         String content = String.format("发现容器[ %s ]掉线---- %s", container.getName(), time);
@@ -87,12 +89,6 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
     public void sendVmOfflineNotification(Long id) {
         Notification notification = new Notification();
         HostMachine vm = hostMachineService.getById(id);
-        Integer notify = vm.getNotify();
-        //判断发送方式
-        if (notify.equals(SystemConstant.NOTIFY_BROWSER_EMAIL) || notify.equals(SystemConstant.NOTIFY_EMAIL)) {
-            //发送邮件
-            sendVmOfflineEmail(id);
-        }
         notification.setTitle("虚拟机掉线")
                 .setType(SystemConstant.OFFLINE_NOTIFICATION)
                 .setSendType(vm.getNotify())
@@ -104,7 +100,8 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
         log.info("[掉线提醒]：发送浏览器提醒：{}", content);
     }
 
-    private void sendVmOfflineEmail(Long id) {
+    @Override
+    public void sendVmOfflineEmail(Long id) {
         HostMachine vm = hostMachineService.getById(id);
         String time = LocalDateTime.now().toString();
         String content = String.format("发现虚拟机[ %s ]掉线---- %s", vm.getName(), time);
@@ -113,15 +110,15 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
     }
 
     @Override
+    public void sendVmOfflineNotificationEmail(Long id) {
+        sendVmOfflineNotification(id);
+        sendVmOfflineEmail(id);
+    }
+
+    @Override
     public void sendHostOfflineNotification(Long id) {
         Notification notification = new Notification();
         HostMachine host = hostMachineService.getById(id);
-        Integer notify = host.getNotify();
-        //判断发送方式
-        if (notify.equals(SystemConstant.NOTIFY_BROWSER_EMAIL) || notify.equals(SystemConstant.NOTIFY_EMAIL)) {
-            //发送邮件
-            sendHostOfflineEmail(id);
-        }
         notification.setTitle("物理机掉线")
                 .setType(SystemConstant.OFFLINE_NOTIFICATION)
                 .setSendType(host.getNotify())
@@ -131,6 +128,21 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
         notification.setContent(content);
         save(notification);
         log.info("[掉线提醒]：发送浏览器提醒：{}", content);
+    }
+
+    @Override
+    public void sendHostOfflineEmail(Long id) {
+        HostMachine host = hostMachineService.getById(id);
+        String time = LocalDateTime.now().toString();
+        String content = String.format("发现物理机[ %s ]掉线---- %s", host.getName(), time);
+        MailUtil.send(systemSettingUtils.getMailAccount(), CollUtil.newArrayList(systemSettingUtils.getMailTarget()), "Noodles掉线提醒", content, false);
+        log.info("[掉线提醒]：发送邮件提醒：{}", content);
+    }
+
+    @Override
+    public void sendHostOfflineNotificationEmail(Long id) {
+        sendHostOfflineNotification(id);
+        sendHostOfflineEmail(id);
     }
 
     @Override
@@ -219,13 +231,6 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
         return ResponseResult.okResult(count(notificationLambdaQueryWrapper));
     }
 
-    private void sendHostOfflineEmail(Long id) {
-        HostMachine host = hostMachineService.getById(id);
-        String time = LocalDateTime.now().toString();
-        String content = String.format("发现物理机[ %s ]掉线---- %s", host.getName(), time);
-        MailUtil.send(systemSettingUtils.getMailAccount(), CollUtil.newArrayList(systemSettingUtils.getMailTarget()), "Noodles掉线提醒", content, false);
-        log.info("[掉线提醒]：发送邮件提醒：{}", content);
-    }
 }
 
 

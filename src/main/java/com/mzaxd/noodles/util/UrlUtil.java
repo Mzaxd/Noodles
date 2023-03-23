@@ -51,7 +51,7 @@ public class UrlUtil {
 
     public static boolean isServiceOnline(String serverName, int port) throws IOException {
         Socket socket = new Socket(serverName, port);
-        log.info("[实例状态检测]：" + serverName + "服务已经开启");
+        log.info("[实例状态检测]：" + serverName + ":" + port + "服务已经开启");
         socket.close();
         return true;
     }

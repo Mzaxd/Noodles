@@ -18,16 +18,52 @@ public interface NotificationService extends IService<Notification> {
     void sendContainerOfflineNotification(Long id);
 
     /**
+     * 发送容器掉线通知和邮件
+     * @param id
+     */
+    void sendContainerOfflineNotificationEmail(Long id);
+
+    /**
+     * 发送容器掉线邮件
+     * @param id
+     */
+    void sendContainerOfflineEmail(Long id);
+
+    /**
      * 发送虚拟机掉线通知
      * @param id
      */
     void sendVmOfflineNotification(Long id);
 
     /**
+     * 发送虚拟机掉线邮件
+     * @param id
+     */
+    void sendVmOfflineEmail(Long id);
+
+    /**
+     * 发送虚拟机掉线通知和邮件
+     * @param id
+     */
+    void sendVmOfflineNotificationEmail(Long id);
+
+    /**
      * 发送物理机掉线通知
      * @param id
      */
     void sendHostOfflineNotification(Long id);
+
+    /**
+     * 发送物理机掉线邮件
+     * @param id
+     */
+    void sendHostOfflineEmail(Long id);
+
+    /**
+     * 发送物理机掉线通知和邮件
+     * @param id
+     */
+    void sendHostOfflineNotificationEmail(Long id);
 
 
     /**

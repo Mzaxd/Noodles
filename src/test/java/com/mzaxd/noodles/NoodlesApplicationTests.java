@@ -501,7 +501,7 @@ class NoodlesApplicationTests {
                 }
                 //通过Ping的方式判断是否在线
                 if (StringUtils.hasText(vm.getServerAddress())) {
-                    if (UrlUtil.isHostOnline(vm.getServerAddress())){
+                    if (UrlUtil.isHostOnline(vm.getServerAddress())) {
                         log.info("[实例状态检测]：与{}建立连接成功", vm.getName());
                         vm.setHostMachineState(SystemConstant.HOST_MACHINE_STATE_ONLINE);
                         return;
@@ -628,5 +628,60 @@ class NoodlesApplicationTests {
         } else {
             System.out.println("解析失败");
         }
+    }
+
+
+    @Test
+    public void containerCheck() {
+        List<Container> containers = containerService.list();
+
+        containers.forEach(container -> {
+            try {
+                if (!StringUtils.hasText(container.getWebUi()) && !StringUtils.hasText(container.getServerAddress())) {
+                    container.setContainerState(SystemConstant.CONTAINER_STATE_UNKNOWN);
+                    return;
+                }
+                //通过Socket（IP+端口）判断是否在线
+                if (StringUtils.hasText(container.getServerAddress())) {
+                    if (UrlUtil.isServiceOnline(UrlUtil.getHostname(container.getServerAddress()), UrlUtil.getPort(container.getServerAddress()))) {
+                        container.setContainerState(SystemConstant.CONTAINER_STATE_RUNNING);
+                        return;
+                    }
+                }
+                //通过HTTP请求判断是否在线
+                HttpRequest.get(container.getWebUi()).setConnectionTimeout(5000).execute(true);
+                log.info("[实例状态检测]：与{}建立连接成功", container.getName());
+                container.setContainerState(SystemConstant.CONTAINER_STATE_RUNNING);
+            } catch (Exception exception) {
+                log.info("[实例状态检测]：与{}建立连接失败，状态转为离线", container.getName());
+                container.setContainerState(SystemConstant.CONTAINER_STATE_EXITED);
+                // 判断 Redis 里面有没有，如果有就不需要提醒，如果没有就提醒
+                Set<String> set = redisCache.getCacheSet(RedisConstant.NOTIFY_CONTAINER_IDS);
+                if (CollectionUtils.isEmpty(set)) {
+                    set = new HashSet<>();
+                }
+                    // 如果 Redis 里面有，说明已经发送过了未 check 的通知，所以不需要发送，直接返回
+                    if (set.contains(container.getId().toString())) {
+                        return;
+                    } else {
+                        // 根据实例对应的提醒方式进行提醒
+                        if (container.getNotify().equals(SystemConstant.NOTIFY_NO)) {
+                            return;
+                        }
+                        if (container.getNotify().equals(SystemConstant.NOTIFY_BROWSER)) {
+                            notificationService.sendContainerOfflineNotification(container.getId());
+                            set.add(container.getId().toString());
+                        }
+                        if (container.getNotify().equals(SystemConstant.NOTIFY_EMAIL)) {
+                            notificationService.sendContainerOfflineEmail(container.getId());
+                        }
+                        if (container.getNotify().equals(SystemConstant.NOTIFY_BROWSER_EMAIL)) {
+                            notificationService.sendContainerOfflineNotificationEmail(container.getId());
+                            set.add(container.getId().toString());
+                        }
+                    }
+                redisCache.setCacheSet(RedisConstant.NOTIFY_CONTAINER_IDS, set);
+            }
+        });
     }
 }

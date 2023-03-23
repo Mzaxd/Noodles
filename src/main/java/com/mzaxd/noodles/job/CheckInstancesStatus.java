@@ -13,16 +13,14 @@ import com.mzaxd.noodles.util.CpuUtil;
 import com.mzaxd.noodles.util.RedisCache;
 import com.mzaxd.noodles.util.UrlUtil;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.*;
 
 /**
@@ -49,6 +47,9 @@ public class CheckInstancesStatus {
 
     @Resource
     private RedisCache redisCache;
+
+    @Resource
+    private RedisTemplate redisTemplate;
 
     /**
      * 检查实例状态并且发送对应的提醒
@@ -96,21 +97,29 @@ public class CheckInstancesStatus {
                     container.setContainerState(SystemConstant.CONTAINER_STATE_EXITED);
                     // 判断 Redis 里面有没有，如果有就不需要提醒，如果没有就提醒
                     Set<String> set = redisCache.getCacheSet(RedisConstant.NOTIFY_CONTAINER_IDS);
-                    if (!CollectionUtils.isEmpty(set)) {
-                        // 如果 Redis 里面有，说明已经发送过了未 check 的通知，所以不需要发送，直接返回
-                        if (set.contains(container.getId().toString())) {
+                    if (CollectionUtils.isEmpty(set)) {
+                        set = new HashSet<>();
+                    }
+                    // 如果 Redis 里面有，说明已经发送过了未 check 的通知，所以不需要发送，直接返回
+                    if (set.contains(container.getId().toString())) {
+                        return container;
+                    } else {
+                        // 根据实例对应的提醒方式进行提醒
+                        if (container.getNotify().equals(SystemConstant.NOTIFY_NO)) {
                             return container;
-                        } else {
-                            // 根据实例对应的提醒方式进行提醒
-                            if (container.getNotify().equals(SystemConstant.NOTIFY_NO)) {
-                                return container;
-                            } else {
-                                notificationService.sendContainerOfflineNotification(container.getId());
-                            }
+                        }
+                        if (container.getNotify().equals(SystemConstant.NOTIFY_BROWSER)) {
+                            notificationService.sendContainerOfflineNotification(container.getId());
+                            set.add(container.getId().toString());
+                        }
+                        if (container.getNotify().equals(SystemConstant.NOTIFY_EMAIL)) {
+                            notificationService.sendContainerOfflineEmail(container.getId());
+                        }
+                        if (container.getNotify().equals(SystemConstant.NOTIFY_BROWSER_EMAIL)) {
+                            notificationService.sendContainerOfflineNotificationEmail(container.getId());
+                            set.add(container.getId().toString());
                         }
                     }
-                    // 存入 Redis
-                    set.add(container.getId().toString());
                     redisCache.setCacheSet(RedisConstant.NOTIFY_CONTAINER_IDS, set);
                 }
                 return container;
@@ -145,7 +154,7 @@ public class CheckInstancesStatus {
                 }
                 //通过Ping的方式判断是否在线
                 if (StringUtils.hasText(vm.getServerAddress())) {
-                    if (UrlUtil.isHostOnline(vm.getServerAddress())){
+                    if (UrlUtil.isHostOnline(vm.getServerAddress())) {
                         log.info("[实例状态检测]：与{}建立连接成功", vm.getName());
                         vm.setHostMachineState(SystemConstant.HOST_MACHINE_STATE_ONLINE);
                         return;
@@ -160,21 +169,29 @@ public class CheckInstancesStatus {
                 vm.setHostMachineState(SystemConstant.HOST_MACHINE_STATE_OFFLINE);
                 //判断Redis里面有没有 如果有就不需要提醒 如果没有就提醒
                 Set<String> set = redisCache.getCacheSet(RedisConstant.NOTIFY_VM_IDS);
-                if (!CollectionUtils.isEmpty(set)) {
-                    //如果redis里面有 说明已经发送过了未check的通知 所以不需要发送 直接返回
-                    if (set.contains(vm.getId().toString())) {
+                if (CollectionUtils.isEmpty(set)) {
+                    set = new HashSet<>();
+                }
+                //如果redis里面有 说明已经发送过了未check的通知 所以不需要发送 直接返回
+                if (set.contains(vm.getId().toString())) {
+                    return;
+                } else {
+                    //根据实例对应的提醒方式进行提醒
+                    if (vm.getNotify().equals(SystemConstant.NOTIFY_NO)) {
                         return;
-                    } else {
-                        //根据实例对应的提醒方式进行提醒
-                        if (vm.getNotify().equals(SystemConstant.NOTIFY_NO)) {
-                            return;
-                        } else {
-                            notificationService.sendVmOfflineNotification(vm.getId());
-                        }
+                    }
+                    if (vm.getNotify().equals(SystemConstant.NOTIFY_BROWSER)) {
+                        notificationService.sendContainerOfflineNotification(vm.getId());
+                        set.add(vm.getId().toString());
+                    }
+                    if (vm.getNotify().equals(SystemConstant.NOTIFY_EMAIL)) {
+                        notificationService.sendContainerOfflineEmail(vm.getId());
+                    }
+                    if (vm.getNotify().equals(SystemConstant.NOTIFY_BROWSER_EMAIL)) {
+                        notificationService.sendContainerOfflineNotificationEmail(vm.getId());
+                        set.add(vm.getId().toString());
                     }
                 }
-                //存入redis
-                set.add(vm.getId().toString());
                 redisCache.setCacheSet(RedisConstant.NOTIFY_VM_IDS, set);
             }
         });
@@ -200,21 +217,29 @@ public class CheckInstancesStatus {
                 }
                 //判断Redis里面有没有 如果有就不需要提醒 如果没有就提醒
                 Set<String> set = redisCache.getCacheSet(RedisConstant.NOTIFY_HOST_IDS);
-                if (!CollectionUtils.isEmpty(set)) {
-                    //如果redis里面有 说明已经发送过了未check的通知 所以不需要发送 直接返回
-                    if (set.contains(hostMachine.getId().toString())) {
+                if (CollectionUtils.isEmpty(set)) {
+                    set = new HashSet<>();
+                }
+                //如果redis里面有 说明已经发送过了未check的通知 所以不需要发送 直接返回
+                if (set.contains(hostMachine.getId().toString())) {
+                    return;
+                } else {
+                    //根据实例对应的提醒方式进行提醒
+                    if (hostMachine.getNotify().equals(SystemConstant.NOTIFY_NO)) {
                         return;
-                    } else {
-                        //根据实例对应的提醒方式进行提醒
-                        if (hostMachine.getNotify().equals(SystemConstant.NOTIFY_NO)) {
-                            return;
-                        } else {
-                            notificationService.sendHostOfflineNotification(hostMachine.getId());
-                        }
+                    }
+                    if (hostMachine.getNotify().equals(SystemConstant.NOTIFY_BROWSER)) {
+                        notificationService.sendContainerOfflineNotification(hostMachine.getId());
+                        set.add(hostMachine.getId().toString());
+                    }
+                    if (hostMachine.getNotify().equals(SystemConstant.NOTIFY_EMAIL)) {
+                        notificationService.sendContainerOfflineEmail(hostMachine.getId());
+                    }
+                    if (hostMachine.getNotify().equals(SystemConstant.NOTIFY_BROWSER_EMAIL)) {
+                        notificationService.sendContainerOfflineNotificationEmail(hostMachine.getId());
+                        set.add(hostMachine.getId().toString());
                     }
                 }
-                //存入redis
-                set.add(hostMachine.getId().toString());
                 redisCache.setCacheSet(RedisConstant.NOTIFY_HOST_IDS, set);
             }
         });

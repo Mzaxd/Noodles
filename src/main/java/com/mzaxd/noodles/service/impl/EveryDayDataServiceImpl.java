@@ -87,18 +87,18 @@ public class EveryDayDataServiceImpl extends ServiceImpl<EveryDayDataMapper, Eve
 
     @Override
     public List<EveryDayData> getLastWeekData() {
-        return getLastDate(6);
+        return getLastDate(7);
     }
 
-    public List<EveryDayData> getLastDate(int minusDay) {
+    public List<EveryDayData> getLastDate(int dayNum) {
         // 今天的前一天是截止日期
         LocalDate end = LocalDate.now().minusDays(1);
         // 七天前是起始日期
-        LocalDate start = end.minusDays(minusDay);
+        LocalDate start = end.minusDays(6);
         List<EveryDayData> list = list(getLastWeekLambdaWrapper());
 
         // 如果不足7条，则补充空数据
-        int missingDays = 7 - list.size();
+        int missingDays = dayNum - list.size();
         if (missingDays > 0) {
             List<EveryDayData> emptyData = new ArrayList<>();
             for (int i = 0; i < missingDays; i++) {
@@ -122,7 +122,7 @@ public class EveryDayDataServiceImpl extends ServiceImpl<EveryDayDataMapper, Eve
 
     @Override
     public List<EveryDayData> getLastSixDayData() {
-        return getLastDate(5);
+        return getLastDate(6);
     }
 }
 

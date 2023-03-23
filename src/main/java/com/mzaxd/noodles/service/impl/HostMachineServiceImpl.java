@@ -149,9 +149,10 @@ public class HostMachineServiceImpl extends ServiceImpl<HostMachineMapper, HostM
         } else {
             sshLink = new SshLink();
         }
-        sshLink.setHost(vmVo.getSshHost()).setPort(vmVo.getSshPort()).setName(vmVo.getSshUser()).setPassword(vmVo.getSshPwd());
-        sshLinkService.saveOrUpdate(sshLink);
-
+        if (SshLinkUtil.isVmSshLinkParamValid(vmVo)) {
+            sshLink.setHost(vmVo.getSshHost()).setPort(vmVo.getSshPort()).setName(vmVo.getSshUser()).setPassword(vmVo.getSshPwd());
+            sshLinkService.saveOrUpdate(sshLink);
+        }
         HostMachine vm = BeanCopyUtils.copyBean(vmVo, HostMachine.class);
         vm.setSshId(sshLink.getId());
         saveOrUpdate(vm);

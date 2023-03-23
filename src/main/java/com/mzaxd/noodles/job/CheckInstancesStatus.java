@@ -61,7 +61,7 @@ public class CheckInstancesStatus {
         int corePoolSize = Math.min(thread + 1, containerCount);
         int maxPoolSize = Math.max(thread + 1, containerCount);
 
-        // 创建一个包含10个线程的线程池
+        // 创建一个线程池
         ExecutorService executor = new ThreadPoolExecutor(
                 corePoolSize,
                 maxPoolSize,

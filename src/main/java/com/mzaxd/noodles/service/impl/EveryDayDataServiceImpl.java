@@ -9,9 +9,10 @@ import com.mzaxd.noodles.mapper.EveryDayDataMapper;
 import com.mzaxd.noodles.service.EveryDayDataService;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.ZoneId;
+import java.util.*;
 
 /**
 * @author 13439
@@ -59,7 +60,22 @@ public class EveryDayDataServiceImpl extends ServiceImpl<EveryDayDataMapper, Eve
 
     @Override
     public EveryDayData getYesterdayData() {
-        return getOne(getYesterdayLambdaWrapper());
+        EveryDayData everyData = getOne(getYesterdayLambdaWrapper());
+        if (Objects.nonNull(everyData)) {
+            return everyData;
+        } else {
+            everyData = createDefaultEverydayData();
+        }
+        return everyData;
+    }
+
+    public EveryDayData createDefaultEverydayData() {
+        EveryDayData everyDayData = new EveryDayData();
+        everyDayData.setHostCount(0).setHostOnlineCount(0).setHostOfflineCount(0).setHostUnknownCount(0)
+                .setVmCount(0).setVmOnlineCount(0).setVmOfflineCount(0).setVmUnknownCount(0)
+                .setContainerCount(0).setContainerOnlineCount(0).setContainerOfflineCount(0).setContainerUnknownCount(0)
+                .setAuditCount(0).setServirCount(0);
+        return everyDayData;
     }
 
     private LambdaQueryWrapper<EveryDayData> getLastWeekLambdaWrapper() {
@@ -71,8 +87,31 @@ public class EveryDayDataServiceImpl extends ServiceImpl<EveryDayDataMapper, Eve
 
     @Override
     public List<EveryDayData> getLastWeekData() {
-        return list(getLastWeekLambdaWrapper());
+        return getLastDate(6);
     }
+
+    public List<EveryDayData> getLastDate(int minusDay) {
+        // 今天的前一天是截止日期
+        LocalDate end = LocalDate.now().minusDays(1);
+        // 七天前是起始日期
+        LocalDate start = end.minusDays(minusDay);
+        List<EveryDayData> list = list(getLastWeekLambdaWrapper());
+
+        // 如果不足7条，则补充空数据
+        int missingDays = 7 - list.size();
+        if (missingDays > 0) {
+            List<EveryDayData> emptyData = new ArrayList<>();
+            for (int i = 0; i < missingDays; i++) {
+                EveryDayData data = createDefaultEverydayData();
+                data.setCreateTime(Date.from(start.plusDays(i).atStartOfDay().atZone(ZoneId.systemDefault()).toInstant()));
+                emptyData.add(data);
+            }
+            emptyData.addAll(list);
+            list = emptyData;
+        }
+        return list;
+    }
+
 
     private LambdaQueryWrapper<EveryDayData> getLastSixDayLambdaWrapper() {
         LambdaQueryWrapper<EveryDayData> everyDayDataLambdaQueryWrapper = new LambdaQueryWrapper<>();
@@ -83,7 +122,7 @@ public class EveryDayDataServiceImpl extends ServiceImpl<EveryDayDataMapper, Eve
 
     @Override
     public List<EveryDayData> getLastSixDayData() {
-        return list(getLastSixDayLambdaWrapper());
+        return getLastDate(5);
     }
 }
 

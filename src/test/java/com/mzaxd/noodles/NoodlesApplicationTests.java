@@ -22,6 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
@@ -58,6 +59,9 @@ class NoodlesApplicationTests {
 
     @Resource
     private HostDetectorService hostDetectorService;
+
+    @Resource
+    private PasswordEncoder passwordEncoder;
 
     @Test
     void contextLoads() {
@@ -696,7 +700,7 @@ class NoodlesApplicationTests {
             });
         }
 
-// Shutdown the thread pool and wait for all tasks to complete
+        // Shutdown the thread pool and wait for all tasks to complete
         executor.shutdown();
         executor.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
 
@@ -716,5 +720,12 @@ class NoodlesApplicationTests {
         System.out.println(set);
         set.add("1");
         redisCache.setCacheSet(RedisConstant.NOTIFY_HOST_IDS, set);
+    }
+
+
+    @Test
+    public void passwordEncode() {
+        String encodePassword = passwordEncoder.encode("changeme");
+        System.out.println(encodePassword);
     }
 }

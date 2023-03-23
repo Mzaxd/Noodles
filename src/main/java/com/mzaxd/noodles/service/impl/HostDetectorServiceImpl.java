@@ -133,25 +133,36 @@ public class HostDetectorServiceImpl extends ServiceImpl<HostDetectorMapper, Hos
         Double memoryFree = 0.0;
         //已使用内存
         Double memoryUsed = 0.0;
-        Map<Long, DynamicData> dynamicData = getDynamicData(getAllALiveDetectors());
-        for (DynamicData data : dynamicData.values()) {
-            count++;
-            memoryFree += data.getMemFree();
-            memoryUsed += data.getMemUsed();
-            Double total = data.getMemFree() + data.getMemUsed();
-            memoryTotal += total.intValue();
-            double memoryUsedRate = memoryUsed / memoryTotal;
-            memoryTotalUsedRate += memoryUsedRate;
-            if (memoryUsedRate > memoryUsedMaxRate) {
-                memoryUsedMaxRate = memoryUsedRate;
+
+        Map<Long, DynamicData> dynamicData;
+        try {
+            dynamicData = getDynamicData(getAllALiveDetectors());
+            for (DynamicData data : dynamicData.values()) {
+                count++;
+                memoryFree += data.getMemFree();
+                memoryUsed += data.getMemUsed();
+                Double total = data.getMemFree() + data.getMemUsed();
+                memoryTotal += total.intValue();
+                double memoryUsedRate = memoryUsed / memoryTotal;
+                memoryTotalUsedRate += memoryUsedRate;
+                if (memoryUsedRate > memoryUsedMaxRate) {
+                    memoryUsedMaxRate = memoryUsedRate;
+                }
             }
+            memoryUsedAvgRate = memoryTotalUsedRate / count;
+            result.put("memoryTotal", memoryTotal);
+            result.put("memoryFree", memoryFree);
+            result.put("memoryUsed", memoryUsed);
+            result.put("memoryUsedMaxRate", NumberUtil.round(memoryUsedMaxRate, 4));
+            result.put("memoryUsedAvgRate", NumberUtil.round(memoryUsedAvgRate, 4));
+        } catch (Exception e) {
+            e.printStackTrace();
+            result.put("memoryTotal", 0);
+            result.put("memoryFree", 0);
+            result.put("memoryUsed", 0);
+            result.put("memoryUsedMaxRate", 0);
+            result.put("memoryUsedAvgRate", 0);
         }
-        memoryUsedAvgRate = memoryTotalUsedRate / count;
-        result.put("memoryTotal", memoryTotal);
-        result.put("memoryFree", memoryFree);
-        result.put("memoryUsed", memoryUsed);
-        result.put("memoryUsedMaxRate", NumberUtil.round(memoryUsedMaxRate, 4));
-        result.put("memoryUsedAvgRate", NumberUtil.round(memoryUsedAvgRate, 4));
         return ResponseResult.okResult(result);
     }
 

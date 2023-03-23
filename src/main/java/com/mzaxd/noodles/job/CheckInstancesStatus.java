@@ -56,7 +56,7 @@ public class CheckInstancesStatus {
      * 检查实例状态并且发送对应的提醒
      */
     @SneakyThrows
-    @Scheduled(cron = "* 0/1 * * * ?")
+    @Scheduled(cron = "* 0/2 * * * ?")
     public void checkInstancesStatus() {
         List<Container> containers = containerService.list();
 

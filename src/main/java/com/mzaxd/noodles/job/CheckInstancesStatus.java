@@ -108,6 +108,7 @@ public class CheckInstancesStatus {
                         }
                         if (container.getNotify().equals(SystemConstant.NOTIFY_EMAIL)) {
                             notificationService.sendContainerOfflineEmail(container.getId());
+                            set.add(container.getId().toString());
                         }
                         if (container.getNotify().equals(SystemConstant.NOTIFY_BROWSER_EMAIL)) {
                             notificationService.sendContainerOfflineNotificationEmail(container.getId());
@@ -171,6 +172,7 @@ public class CheckInstancesStatus {
                     }
                     if (vm.getNotify().equals(SystemConstant.NOTIFY_EMAIL)) {
                         notificationService.sendContainerOfflineEmail(vm.getId());
+                        set.add(vm.getId().toString());
                     }
                     if (vm.getNotify().equals(SystemConstant.NOTIFY_BROWSER_EMAIL)) {
                         notificationService.sendContainerOfflineNotificationEmail(vm.getId());
@@ -218,6 +220,7 @@ public class CheckInstancesStatus {
                     }
                     if (hostMachine.getNotify().equals(SystemConstant.NOTIFY_EMAIL)) {
                         notificationService.sendContainerOfflineEmail(hostMachine.getId());
+                        set.add(hostMachine.getId().toString());
                     }
                     if (hostMachine.getNotify().equals(SystemConstant.NOTIFY_BROWSER_EMAIL)) {
                         notificationService.sendContainerOfflineNotificationEmail(hostMachine.getId());

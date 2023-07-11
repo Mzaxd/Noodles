@@ -14,25 +14,22 @@ import com.mzaxd.noodles.constant.UrlConstant;
 import com.mzaxd.noodles.domain.entity.*;
 import com.mzaxd.noodles.mapper.OsMapper;
 import com.mzaxd.noodles.service.*;
-import com.mzaxd.noodles.util.CpuUtil;
-import com.mzaxd.noodles.util.RedisCache;
-import com.mzaxd.noodles.util.SystemInfoUtils;
-import com.mzaxd.noodles.util.UrlUtil;
+import com.mzaxd.noodles.util.*;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
+import org.springframework.web.client.RestTemplate;
 
 import java.io.IOException;
-import java.net.InetAddress;
+import java.net.*;
 
 import javax.annotation.Resource;
-import java.net.Socket;
-import java.net.URI;
-import java.net.URISyntaxException;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.regex.Matcher;
@@ -111,6 +108,9 @@ class NoodlesApplicationTests {
 
     @Resource
     private EveryDayDataService everyDayDataService;
+
+    @Resource
+    private SystemSettingUtils systemSettingUtils;
 
     /**
      * 每天晚上收集今日数据
@@ -727,5 +727,50 @@ class NoodlesApplicationTests {
     public void passwordEncode() {
         String encodePassword = passwordEncoder.encode("changeme");
         System.out.println(encodePassword);
+    }
+
+    @LocalServerPort
+    int port;
+
+    @Resource
+    private RestTemplate restTemplate;
+
+    @Test
+    public void getBackendAddress() throws UnknownHostException {
+        // 获取本地IP地址
+        InetAddress inetAddress = InetAddress.getLocalHost();
+        String ipAddress = inetAddress.getHostAddress();
+
+        // 获取当前后端服务器的端口号
+        String portNumber = Integer.toString(port);
+
+        // 返回后端服务器的地址，格式为：http://ipAddress:portNumber
+        System.out.println("http://" + ipAddress + ":" + portNumber);
+    }
+
+    @Test
+    public void sendEmailTest() {
+        // 获取本机IP地址和端口号
+        String ipAddress;
+        int port;
+        try (ServerSocket serverSocket = new ServerSocket(0)) {
+            port = serverSocket.getLocalPort();
+            ipAddress = InetAddress.getLocalHost().getHostAddress();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return;
+        }
+
+        // 创建邮件内容
+        String yourString = "这是您的字符串";
+        String yourUrl = "http://" + ipAddress + ":" + port + "/api";
+        String emailBody = "<html><body><p>您好，以下是您的字符串：</p><p>" +
+                yourString + "</p><p><a href=\"" + yourUrl + "\">发送HTTP请求</a></p></body></html>";
+        String time = LocalDateTime.now().toString();
+        String content = String.format("发现容器[ %s ]掉线---- %s", "测试测试", time);
+        // 发送邮件...
+        MailUtil.send(systemSettingUtils.getMailAccount(), CollUtil.newArrayList(systemSettingUtils.getMailTarget()), "Noodles掉线提醒", emailBody, true);
+
+
     }
 }

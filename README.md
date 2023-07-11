@@ -97,7 +97,7 @@
 
 ## 如何使用？
 
-文档地址：http://doc.ruoyi.vip
+[文档地址](https://mzaxd.github.io/2023/04/22/Noodles%E4%BD%BF%E7%94%A8%E6%8C%87%E5%8D%97/)
 
 
 
